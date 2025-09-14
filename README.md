@@ -1,20 +1,22 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+EcoWatt
 
-# Run and deploy your AI Studio app
+Aplicação React para monitoramento e análise de consumo de energia, com sugestões para eficiência energética.
 
-This contains everything you need to run your app locally.
+Tecnologias
 
-View your app in AI Studio: https://ai.studio/apps/temp/1
+React + TypeScript (Create React App)
 
-## Run Locally
+Pré-requisitos
 
-**Prerequisites:**  Node.js
+Node.js (versão 16+ recomendada)
 
+npm (ou yarn)
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Instalação
+git clone https://github.com/luan365/EcoWatt.git
+cd EcoWatt
+npm install
+
+Execução
+npm start      # ambiente de desenvolvimento
+npm run build  # build para produção
