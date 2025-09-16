@@ -1,4 +1,3 @@
-// src/components/AITips.tsx
 import React from 'react';
 import type { Appliance } from '../types';
 
