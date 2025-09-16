@@ -8,7 +8,7 @@ interface AddApplianceModalProps {
   onAdd: (appliance: Omit<Appliance, 'id'>) => void;
 }
 
-export const AddApplianceModal: React.FC<AddApplianceModalProps> = ({ isOpen, onClose, onAdd }) => {
+const AddApplianceModal: React.FC<AddApplianceModalProps> = ({ isOpen, onClose, onAdd }) => {
   const [name, setName] = useState('');
   const [power, setPower] = useState('');
   const [dailyUsage, setDailyUsage] = useState('');
@@ -86,3 +86,4 @@ export const AddApplianceModal: React.FC<AddApplianceModalProps> = ({ isOpen, on
     </div>
   );
 };
+export default AddApplianceModal;

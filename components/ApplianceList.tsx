@@ -9,7 +9,7 @@ interface ApplianceListProps {
   tariff: number;
 }
 
-export const ApplianceList: React.FC<ApplianceListProps> = ({ appliances, onDelete, tariff }) => {
+const ApplianceList: React.FC<ApplianceListProps> = ({ appliances, onDelete, tariff }) => {
 
   const calculateMonthlyCost = (appliance: Appliance) => {
     const dailyKWh = (appliance.power * appliance.dailyUsage) / 1000;
@@ -48,3 +48,4 @@ export const ApplianceList: React.FC<ApplianceListProps> = ({ appliances, onDele
     </div>
   );
 };
+export default ApplianceList;

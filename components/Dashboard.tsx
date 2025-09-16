@@ -23,7 +23,7 @@ const StatCard: React.FC<{ title: string; value: string; icon: string; color: st
 );
 
 
-export const Dashboard: React.FC<DashboardProps> = ({ appliances, tariff }) => {
+const Dashboard: React.FC<DashboardProps> = ({ appliances, tariff }) => {
   const { totalMonthlyCost, totalDailyKWh, pieData } = useMemo(() => {
     let totalDailyConsumptionWh = 0;
     const dataForPie = appliances.map(appliance => {
@@ -87,3 +87,5 @@ export const Dashboard: React.FC<DashboardProps> = ({ appliances, tariff }) => {
     </div>
   );
 };
+
+export default Dashboard;
