@@ -1,5 +1,5 @@
-
 {
   "name": "Monitor EcoWatt",
-  "description": "Uma aplicação web para monitorar o consumo de energia residencial, fornecendo insights e dicas com IA para promover a eficiência energética e a sustentabilidade."
+  "description": "An intelligent energy consumption monitor that helps users track their electricity usage, estimate costs, and receive personalized energy-saving tips powered by the Gemini API.",
+  "requestFramePermissions": []
 }

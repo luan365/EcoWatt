@@ -1,89 +1,108 @@
-
 import React, { useState } from 'react';
 import type { Appliance } from '../types';
+import { PlugIcon } from './icons/PlugIcon';
 
 interface AddApplianceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (appliance: Omit<Appliance, 'id'>) => void;
+  onAddAppliance: (appliance: Omit<Appliance, 'id'>) => void;
 }
 
-const AddApplianceModal: React.FC<AddApplianceModalProps> = ({ isOpen, onClose, onAdd }) => {
+const AddApplianceModal: React.FC<AddApplianceModalProps> = ({ isOpen, onClose, onAddAppliance }) => {
   const [name, setName] = useState('');
   const [power, setPower] = useState('');
   const [dailyUsage, setDailyUsage] = useState('');
-  const [error, setError] = useState('');
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const powerNum = parseFloat(power);
-    const usageNum = parseFloat(dailyUsage);
+    const powerNum = parseInt(power, 10);
+    const dailyUsageNum = parseFloat(dailyUsage.replace(',', '.'));
 
-    if (!name.trim() || isNaN(powerNum) || isNaN(usageNum) || powerNum <= 0 || usageNum < 0 || usageNum > 24) {
-      setError('Por favor, preencha todos os campos com valores válidos. O uso deve ser entre 0 e 24 horas.');
-      return;
+    if (name && !isNaN(powerNum) && powerNum > 0 && !isNaN(dailyUsageNum) && dailyUsageNum > 0 && dailyUsageNum <= 24) {
+      onAddAppliance({
+        name,
+        power: powerNum,
+        dailyUsage: dailyUsageNum,
+      });
+      setName('');
+      setPower('');
+      setDailyUsage('');
+      onClose();
+    } else {
+      alert("Por favor, preencha todos os campos com valores válidos.");
     }
-    
-    onAdd({ name, power: powerNum, dailyUsage: usageNum });
-    setName('');
-    setPower('');
-    setDailyUsage('');
-    setError('');
-    onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Adicionar Novo Eletrodoméstico</h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300">&times;</button>
+    <div className="fixed inset-0 bg-black/70 flex justify-center items-center z-50 p-4" onClick={onClose}>
+      <div className="bg-slate-800 rounded-xl p-8 shadow-2xl w-full max-w-md border border-slate-700" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center mb-6">
+          <PlugIcon className="w-8 h-8 text-emerald-500 mr-4" />
+          <h2 className="text-2xl font-bold text-white">Adicionar Aparelho</h2>
         </div>
-        {error && <p className="text-red-500 bg-red-100 dark:bg-red-900/30 p-3 rounded-md mb-4 text-sm">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-slate-600 dark:text-slate-300">Nome do Eletrodoméstico</label>
+            <label htmlFor="name" className="block text-slate-300 text-sm font-bold mb-2">Nome do Aparelho</label>
             <input
               id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="ex: Geladeira"
-              className="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm text-slate-800 dark:text-white"
+              placeholder="Ex: Geladeira Frost-Free"
+              className="appearance-none border border-slate-600 rounded w-full py-2 px-3 bg-slate-700 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              required
             />
           </div>
           <div>
-            <label htmlFor="power" className="block text-sm font-medium text-slate-600 dark:text-slate-300">Potência (Watts)</label>
+            <label htmlFor="power" className="block text-slate-300 text-sm font-bold mb-2">Potência (em Watts)</label>
             <input
               id="power"
               type="number"
               value={power}
               onChange={(e) => setPower(e.target.value)}
-              placeholder="ex: 150"
-              className="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm text-slate-800 dark:text-white"
+              placeholder="Ex: 200"
+              className="appearance-none border border-slate-600 rounded w-full py-2 px-3 bg-slate-700 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              required
+              min="1"
             />
           </div>
           <div>
-            <label htmlFor="dailyUsage" className="block text-sm font-medium text-slate-600 dark:text-slate-300">Uso Médio Diário (Horas)</label>
+            <label htmlFor="dailyUsage" className="block text-slate-300 text-sm font-bold mb-2">Uso Diário (em horas)</label>
             <input
               id="dailyUsage"
-              type="number"
-              step="0.5"
+              type="text"
               value={dailyUsage}
               onChange={(e) => setDailyUsage(e.target.value)}
-              placeholder="ex: 8"
-              className="mt-1 block w-full px-3 py-2 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm text-slate-800 dark:text-white"
+              placeholder="Ex: 8,5"
+              className="appearance-none border border-slate-600 rounded w-full py-2 px-3 bg-slate-700 text-white leading-tight focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              required
+              pattern="[0-9]+([,.][0-9]+)?"
             />
+             <p className="text-xs text-slate-500 mt-1">Use vírgula ou ponto para decimais. Máximo 24 horas.</p>
           </div>
-          <div className="flex justify-end space-x-3 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-300 dark:hover:bg-slate-500 transition">Cancelar</button>
-            <button type="submit" className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition">Adicionar Eletrodoméstico</button>
+          <div className="flex items-center justify-end pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg mr-2 transition-colors duration-200"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+              Adicionar
+            </button>
           </div>
         </form>
       </div>
     </div>
   );
 };
+
 export default AddApplianceModal;

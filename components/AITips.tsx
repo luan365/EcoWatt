@@ -1,33 +1,89 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import type { Appliance } from '../types';
+import { getEnergySavingTips } from '../services/geminiService';
+import { SparklesIcon } from './icons/SparklesIcon';
 
 interface AITipsProps {
   appliances: Appliance[];
   tariff: number;
+  apiKey: string;
 }
 
-export const AITips: React.FC<AITipsProps> = ({ appliances, tariff }) => {
-  if (appliances.length === 0) {
-    return (
-      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-white">Dicas de Economia</h2>
-        <p className="mt-2 text-slate-600 dark:text-slate-300">
-          Adicione aparelhos para ver dicas de economia de energia.
-        </p>
-      </div>
-    );
-  }
+const AITips: React.FC<AITipsProps> = ({ appliances, tariff, apiKey }) => {
+  const [tips, setTips] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleGenerateTips = useCallback(async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    setError(null);
+    setTips('');
+    try {
+      const generatedTips = await getEnergySavingTips(appliances, tariff, apiKey);
+      setTips(generatedTips);
+    } catch (e) {
+      setError("Ocorreu um erro ao buscar as dicas. Tente novamente.");
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [appliances, tariff, isLoading, apiKey]);
+
+  const hasAppliances = appliances.length > 0;
 
   return (
-    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
-      <h2 className="text-lg font-semibold text-slate-800 dark:text-white">Dicas de Economia</h2>
-      <ul className="mt-2 list-disc list-inside text-slate-600 dark:text-slate-300">
-        {appliances.map((appliance) => (
-          <li key={appliance.id}>
-            Lembre-se de desligar seu <strong>{appliance.name}</strong> quando não estiver usando.
-          </li>
-        ))}
-      </ul>
+    <div className="bg-slate-800 p-6 rounded-xl shadow-lg h-full flex flex-col">
+      <div className="flex items-center mb-2">
+        <SparklesIcon className="w-6 h-6 text-amber-400 mr-3" />
+        <h2 className="text-xl font-bold text-white">Dicas de Economia</h2>
+      </div>
+      <p className="text-slate-400 mb-4 text-sm">
+        Receba dicas personalizadas da IA para reduzir sua conta de luz.
+      </p>
+
+      <button
+        onClick={handleGenerateTips}
+        disabled={isLoading || !hasAppliances || !apiKey}
+        className="w-full bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-emerald-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mb-2"
+      >
+        {isLoading ? (
+          <>
+            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Gerando...
+          </>
+        ) : (
+          "Gerar Dicas com IA"
+        )}
+      </button>
+      <p className="text-xs text-center text-slate-500 h-4">
+        {!hasAppliances ? 'Adicione um aparelho para habilitar.' : !apiKey ? 'Insira sua API Key nas configurações.' : ''}
+      </p>
+
+      <div className="mt-2 flex-grow">
+        {error && <p className="text-red-400 text-center">{error}</p>}
+        
+        {tips ? (
+          <div className="bg-slate-700/50 p-4 rounded-lg">
+            <div className="text-slate-300 text-sm space-y-1">
+              {tips.split('\n').map((line, idx) => {
+                // Substitui **texto** por <strong>texto</strong>
+                const htmlLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                return (
+                  <div key={idx} style={{ whiteSpace: 'pre-wrap' }} dangerouslySetInnerHTML={{ __html: htmlLine }} />
+                );
+              })}
+            </div>
+          </div>
+        ) : !isLoading && (
+           <div className="text-center text-slate-500 pt-8">
+                <p>Suas dicas aparecerão aqui.</p>
+            </div>
+        )}
+      </div>
     </div>
   );
 };

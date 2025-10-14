@@ -1,38 +1,69 @@
-
 import { GoogleGenAI } from "@google/genai";
-import { Appliance } from '../types';
+import type { Appliance } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable is not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-export const getEnergySavingTips = async (appliances: Appliance[], tariff: number): Promise<string> => {
+export const getEnergySavingTips = async (appliances: Appliance[], tariff: number, apiKey: string): Promise<string> => {
+  if (!apiKey) {
+    return "Por favor, insira sua chave da API Gemini nas configurações.";
+  }
+  
   if (appliances.length === 0) {
     return "Por favor, adicione alguns eletrodomésticos primeiro para obter dicas personalizadas.";
   }
 
-  const applianceList = appliances.map(a => `- ${a.name}: ${a.power}W, usado por ${a.dailyUsage} horas/dia`).join('\n');
+  const ai = new GoogleGenAI({ apiKey });
+
+  const applianceList = appliances
+    .map(a => `- ${a.name}: ${a.power}W, usado por ${a.dailyUsage} horas/dia`)
+    .join('\n');
 
   const prompt = `
-    Você é um especialista em eficiência energética para residências brasileiras. Seu tom é encorajador, positivo e prestativo.
-    Com base na lista de eletrodomésticos e seu uso diário a seguir, forneça 3 dicas personalizadas, práticas e fáceis de implementar para reduzir o consumo de eletricidade.
-    Para cada dica, explique brevemente o impacto potencial de forma simples. A tarifa de eletricidade do usuário é de R$${tariff.toFixed(2)}/kWh.
-    A resposta deve ser formatada como uma lista markdown. Não use cabeçalhos.
+    Você é um especialista em eficiência energética e deve gerar uma dica personalizada para cada aparelho fornecido.
+    para o usuário reduzir o consumo de energia com base nos dados fornecidos.
 
+    Contexto:
+    Tarifa: R$${tariff.toFixed(2)}/kWh
     Eletrodomésticos:
     ${applianceList}
-  `;
+
+
+
+    Formato de saída (siga exatamente):
+    1. A primeira linha deve ser: "Aqui estão dicas personalizadas para ajudar a reduzir seu consumo de energia:"
+    2. Para cada eletrodoméstico listado, gere UMA dica específica para aquele aparelho, seguindo esta estrutura:
+    ─────────────────────────────────
+    [EMOJI relacionado ao aparelho] DICA [NOME DO APARELHO]: [título curto e direto]
+    Em até 3 tópicos, cada um começando com "• ", escreva orientações práticas e claras para o uso eficiente desse aparelho. Cada tópico deve estar em uma linha separada.
+    **Economia estimada: R$X–R$Y/mês**
+    ─────────────────────────────────
+    3. Após as dicas específicas, gere UMA dica geral para toda a casa, seguindo a mesma estrutura:
+    ─────────────────────────────────
+    🏠 DICA GERAL: [título curto e direto]
+    Em até 3 tópicos, cada um começando com "• ", escreva orientações práticas e claras para economia de energia na casa toda. Cada tópico deve estar em uma linha separada.
+    **Economia estimada: R$X–R$Y/mês**
+    ─────────────────────────────────
+
+    Regras de formatação:
+    - NÃO use *asteriscos*, # ou -.
+    - NÃO use • nas barras divisórias
+    - Os títulos (DICA 1, 2, 3) devem estar em MAIÚSCULAS.
+    - Cada seção deve ser separada apenas pelas barras “─────────────────────────────────”.
+    - Se for a última sessão não adicione a barra divisória.
+    - O texto deve ser limpo, simétrico e legível em um componente de interface escura.
+    - O tom é profissional, direto e encorajador, sem exageros.
+    `;
 
   try {
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
+      model: 'gemini-2.5-flash',
+      contents: prompt,
     });
+
     return response.text;
   } catch (error) {
     console.error("Error generating tips from Gemini API:", error);
-    return "Desculpe, não consegui gerar as dicas no momento. Por favor, verifique sua chave de API ou tente novamente mais tarde.";
+    if (error instanceof Error && error.message.includes('API key not valid')) {
+      return "A chave da API fornecida não é válida. Por favor, verifique e tente novamente.";
+    }
+    return "Desculpe, não consegui gerar as dicas no momento. Tente novamente mais tarde.";
   }
 };
