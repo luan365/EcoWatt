@@ -14,4 +14,6 @@ npm (ou yarn)
 
 Instalação git clone https://github.com/luan365/EcoWatt.git cd EcoWatt npm install
 
-Execução npm start # ambiente de desenvolvimento npm run build # build para produção
+*npm run build*
+
+*serve dist* para testar localmente
