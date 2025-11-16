@@ -1,32 +1,45 @@
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from "../firebaseConfig"; // Importa o 'auth' que você configurou
+import { 
+  GoogleAuthProvider, 
+  signInWithPopup, 
+  signInAnonymously 
+} from "firebase/auth";
 
-// Cria um provedor Google
+// AQUI ESTAVA O ERRO: Faltava o '.js' no final
+import { auth } from "../firebaseConfig.js"; 
+
+// --- Login com Google (você já tem) ---
 const provider = new GoogleAuthProvider();
-
-/**
- * Função para fazer login com o Google
- */
 export const signInWithGoogle = async () => {
   try {
-    // Abre o Pop-up do Google
     const result = await signInWithPopup(auth, provider);
-    
-    // Pega o usuário logado
     const user = result.user;
     console.log("Usuário logado:", user);
     return user;
-
   } catch (error) {
-    // Trata erros
     console.error("Erro no login com Google:", error);
     return null;
   }
 };
 
+// --- ADICIONE ESTA NOVA FUNÇÃO ---
 /**
- * Função para fazer logout
+ * Função para fazer login anônimo (convidado)
  */
+export const signInAnonymouslyUser = async () => {
+  try {
+    // Chama a função do Firebase
+    const result = await signInAnonymously(auth);
+    const user = result.user;
+    console.log("Usuário anônimo logado:", user);
+    return user;
+  } catch (error) {
+    console.error("Erro no login anônimo:", error);
+    return null;
+  }
+};
+// --- FIM DA NOVA FUNÇÃO ---
+
+// --- Logout (você já tem) ---
 export const signOutUser = async () => {
   try {
     await auth.signOut();
