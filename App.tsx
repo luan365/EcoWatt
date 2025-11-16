@@ -1,14 +1,20 @@
-import React, { useState, Suspense, useEffect } from 'react'; // <-- MUDANÇA (useEffect)
+import React, { useState, Suspense, useEffect } from 'react';
 import type { Appliance } from './types';
-import { useLocalStorage } from './hooks/useLocalStorage';
+// import { useLocalStorage } from './hooks/useLocalStorage'; // --- MUDANÇA --- (Não vamos mais usar)
 import { LeafIcon } from './components/icons/LeafIcon';
 import { PlusIcon } from './components/icons/PlusIcon';
 import { KeyIcon } from './components/icons/KeyIcon';
 
 // Importação do Firebase
-import { signInWithGoogle, signOutUser } from './services/auth.js'; // <-- MUDANÇA (signOutUser)
-import { auth } from './firebaseConfig.js'; // <-- MUDANÇA (importar 'auth')
-import type { User } from 'firebase/auth'; // <-- MUDANÇA (importar tipo 'User')
+import { signInWithGoogle, signOutUser } from './services/auth.js';
+import { auth, db } from './firebaseConfig.js'; // 'db' não é usado aqui, mas é bom manter
+import type { User } from 'firebase/auth';
+
+// --- MUDANÇA --- (Importar funções do banco de dados)
+import { loadAppliances, saveAppliances } from './services/database.js';
+
+// --- MUDANÇA --- (Importar hooks do localStorage que faltavam)
+import { useLocalStorage } from './hooks/useLocalStorage';
 
 // Lazy imports
 const AddApplianceModal = React.lazy(() => import('./components/AddApplianceModal'));
@@ -17,43 +23,68 @@ const ApplianceList = React.lazy(() => import('./components/ApplianceList'));
 const AITips = React.lazy(() => import('./components/AITips'));
 
 const App: React.FC = () => {
-  const [appliances, setAppliances] = useLocalStorage<Appliance[]>('appliances', []);
+  // --- MUDANÇA --- (Usar useState normal, não mais localStorage)
+  const [appliances, setAppliances] = useState<Appliance[]>([]);
+  
+  // (Estes ainda podem ficar no localStorage, pois são configurações locais)
   const [tariff, setTariff] = useLocalStorage<number>('tariff', 0.75);
   const [apiKey, setApiKey] = useLocalStorage<string>('geminiApiKey', '');
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Estado de loading
 
-  // --- CONTROLE DE AUTENTICAÇÃO ---
-  const [user, setUser] = useState<User | null>(null); // <-- MUDANÇA: Estado para o usuário
-
-  // <-- MUDANÇA: "Ouvinte" de autenticação
+  // --- MUDANÇA --- (Bloco de autenticação e carregamento de dados)
   useEffect(() => {
-    // Escuta em tempo real se o usuário está logado ou não
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser); // Se logado, 'currentUser' é o objeto do usuário; se deslogado, é 'null'
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      setUser(currentUser);
+      
+      if (currentUser) {
+        // Usuário FEZ LOGIN
+        setIsLoading(true); // Começa a carregar
+        console.log("Carregando dados do usuário:", currentUser.uid);
+        const loadedData = await loadAppliances(currentUser.uid);
+        setAppliances(loadedData);
+        setIsLoading(false); // Terminou de carregar
+      } else {
+        // Usuário FEZ LOGOUT
+        console.log("Usuário deslogado, limpando dados.");
+        setAppliances([]); // Limpa a lista de aparelhos
+        setIsLoading(false); // Para de carregar
+      }
     });
 
-    // Limpa o "ouvinte" quando o componente é desmontado
     return () => unsubscribe();
   }, []); // Array vazio [], roda apenas uma vez
 
-  // Função de Login (você já tinha)
-  const handleLogin = async () => {
-    const user = await signInWithGoogle();
-    if (user) {
-      alert(`Login bem-sucedido! Olá, ${user.displayName}`);
-    } else {
-      alert("Falha no login.");
+  // --- MUDANÇA --- (Bloco para SALVAR dados)
+  useEffect(() => {
+    // Não salve se estiver carregando ou se o usuário não existir
+    if (isLoading || !user) {
+      return;
     }
-  };
+    
+    // Sempre que 'appliances' mudar, salve no Firestore
+    // Usamos um debounce para não salvar a cada letra digitada, mas sim quando a lista mudar
+    const saveTimer = setTimeout(() => {
+      console.log("Salvando aparelhos no Firestore...");
+      saveAppliances(user.uid, appliances);
+    }, 1000); // Salva 1 segundo após a última mudança
 
-  // <-- MUDANÇA: Função de Logout
+    return () => clearTimeout(saveTimer); // Limpa o timer se 'appliances' mudar de novo
+    
+  }, [appliances, user, isLoading]); // Ouve mudanças em 'appliances'
+
+
+  // Funções de Login/Logout (sem mudança)
+  const handleLogin = async () => {
+    await signInWithGoogle();
+  };
   const handleLogout = async () => {
     await signOutUser();
-    alert("Você foi desconectado.");
   };
-  // --- FIM DO CONTROLE DE AUTENTICAÇÃO ---
 
-
+  // Funções dos Aparelhos (sem mudança na lógica, agora salvam automaticamente)
   const addAppliance = (appliance: Omit<Appliance, 'id'>) => {
     const newAppliance: Appliance = { ...appliance, id: new Date().toISOString() };
     setAppliances([...appliances, newAppliance]);
@@ -82,12 +113,8 @@ const App: React.FC = () => {
             <h1 className="text-2xl font-bold text-white">Monitor EcoWatt</h1>
           </div>
 
-          {/* BOTÕES DO HEADER ATUALIZADOS */}
           <div className="flex items-center space-x-4">
-            
-            {/* <-- MUDANÇA: Lógica de Login/Logout condicional */}
             {user ? (
-              // Se ESTIVER LOGADO
               <>
                 <span className="text-sm text-slate-300 hidden sm:inline">
                   Olá, {user.displayName?.split(' ')[0]}
@@ -100,7 +127,6 @@ const App: React.FC = () => {
                 </button>
               </>
             ) : (
-              // Se NÃO ESTIVER LOGADO
               <button
                 onClick={handleLogin}
                 className="px-4 py-2 bg-sky-600 text-white rounded-lg shadow hover:bg-sky-700 transition-colors"
@@ -109,7 +135,6 @@ const App: React.FC = () => {
               </button>
             )}
             
-            {/* Botão de Adicionar Aparelho (só aparece se estiver logado) */}
             {user && (
               <button
                 onClick={() => setIsModalOpen(true)}
@@ -120,26 +145,27 @@ const App: React.FC = () => {
                 <span className="hidden sm:inline">Adicionar Aparelho</span>
               </button>
             )}
-
           </div>
-          {/* FIM DOS BOTÕES DO HEADER */}
-
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="container mx-auto p-4 sm:p-6 lg:px-8">
         
-        {/* <-- MUDANÇA: Mostrar conteúdo só se estiver logado */}
-        {!user && (
+        {/* --- MUDANÇA --- (Lógica de Loading e Login) */}
+        {!user && !isLoading && (
           <div className="text-center p-10 bg-slate-800 rounded-xl shadow-lg">
             <h2 className="text-2xl font-bold text-white mb-4">Bem-vindo ao EcoWatt</h2>
             <p className="text-slate-300">Por favor, faça login para monitorar seus aparelhos.</p>
           </div>
         )}
+        
+        {isLoading && (
+          <div className="text-center text-slate-400 p-10">Carregando dados...</div>
+        )}
 
-        {user && (
-          // O usuário só vê o conteúdo principal se estiver logado
+        {user && !isLoading && (
+          // O usuário só vê o conteúdo principal se estiver logado E não estiver carregando
           <div className="max-w-7xl mx-auto space-y-8">
             
             {/* Settings Card */}
