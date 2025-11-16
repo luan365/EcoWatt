@@ -5,10 +5,10 @@ import { PlusIcon } from './components/icons/PlusIcon';
 import { KeyIcon } from './components/icons/KeyIcon';
 import { GoogleIcon } from './components/icons/GoogleIcon'; // <-- MUDANÇA 1
 
-import { 
-  signInWithGoogle, 
-  signOutUser, 
-  signInAnonymouslyUser 
+import {
+  signInWithGoogle,
+  signOutUser,
+  signInAnonymouslyUser
 } from './services/auth.js';
 import { auth } from './firebaseConfig.js';
 import type { User } from 'firebase/auth';
@@ -26,7 +26,7 @@ const App: React.FC = () => {
   const [appliances, setAppliances] = useState<Appliance[]>([]);
   const [tariff, setTariff] = useLocalStorage<number>('tariff', 0.75);
   const [apiKey, setApiKey] = useLocalStorage<string>('geminiApiKey', '');
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,14 +34,14 @@ const App: React.FC = () => {
   // --- MUDANÇA 2: Login Anônimo Padrão ---
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
-      
+
       if (currentUser) {
         // Usuário já está logado (Google ou Anônimo)
         setUser(currentUser);
         if (currentUser.isAnonymous) {
           // Se for anônimo, limpa e para de carregar
           console.log("Sessão anônima ativa.");
-          setAppliances([]); 
+          setAppliances([]);
           setIsLoading(false);
         } else {
           // Se for Google, carrega os dados
@@ -66,12 +66,12 @@ const App: React.FC = () => {
   // Bloco para SALVAR dados (sem mudança)
   useEffect(() => {
     if (isLoading || !user || user.isAnonymous) {
-      return; 
+      return;
     }
     const saveTimer = setTimeout(() => {
       console.log("Salvando aparelhos no Firestore...");
       saveAppliances(user.uid, appliances);
-    }, 1000); 
+    }, 1000);
     return () => clearTimeout(saveTimer);
   }, [appliances, user, isLoading]);
 
@@ -79,7 +79,7 @@ const App: React.FC = () => {
   const handleLogin = async () => {
     await signInWithGoogle();
   };
-  
+
   // (Não precisamos mais do handleAnonymousLogin, pois é automático)
 
   const handleLogout = async () => {
@@ -116,7 +116,7 @@ const App: React.FC = () => {
 
           {/* --- MUDANÇA 3: Lógica de botões no Header --- */}
           <div className="flex items-center space-x-4">
-            
+
             {user && user.isAnonymous && (
               // SE ESTIVER ANÔNIMO: Mostra o botão de "Upgrade" para o Google
               <button
@@ -133,7 +133,9 @@ const App: React.FC = () => {
               // SE ESTIVER LOGADO COM GOOGLE: Mostra saudação e logout
               <>
                 <span className="text-sm text-slate-300 hidden sm:inline">
-                  Olá, {user.displayName?.split(' ')[0]}
+                  Olá, {user.displayName?.split(' ')[0]
+                    ? user.displayName.split(' ')[0].charAt(0).toUpperCase() + user.displayName.split(' ')[0].slice(1)
+                    : ''}
                 </span>
                 <button
                   onClick={handleLogout}
@@ -143,7 +145,7 @@ const App: React.FC = () => {
                 </button>
               </>
             )}
-            
+
             {/* O botão de "Adicionar" aparece para TODOS os usuários logados */}
             {user && (
               <button
@@ -163,7 +165,7 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="container mx-auto p-4 sm:p-6 lg:px-8">
-        
+
         {/* Mensagem de loading (agora cobre o estado inicial) */}
         {isLoading && (
           <div className="text-center text-slate-400 p-10">Carregando...</div>
@@ -172,7 +174,7 @@ const App: React.FC = () => {
         {/* O conteúdo aparece para qualquer usuário logado (Google ou Anônimo) */}
         {user && !isLoading && (
           <div className="max-w-7xl mx-auto space-y-8">
-            
+
             {/* Aviso para usuários anônimos */}
             {user.isAnonymous && (
               <div className="bg-yellow-800/50 border border-yellow-700 text-yellow-200 p-4 rounded-xl shadow-lg">
@@ -213,16 +215,16 @@ const App: React.FC = () => {
                   </label>
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <KeyIcon className="h-5 w-5 text-slate-400" />
+                      <KeyIcon className="h-5 w-5 text-slate-400" />
                     </div>
                     <input
-                        type="password"
-                        name="apiKey"
-                        id="apiKey"
-                        className="block w-full rounded-md border-slate-600 bg-slate-700 pl-10 pr-4 py-2 text-white focus:border-emerald-500 focus:ring-emerald-500 sm:text-lg"
-                        placeholder="Cole sua chave aqui"
-                        value={apiKey}
-                        onChange={(e) => setApiKey(e.target.value)}
+                      type="password"
+                      name="apiKey"
+                      id="apiKey"
+                      className="block w-full rounded-md border-slate-600 bg-slate-700 pl-10 pr-4 py-2 text-white focus:border-emerald-500 focus:ring-emerald-500 sm:text-lg"
+                      placeholder="Cole sua chave aqui"
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
                     />
                   </div>
                 </div>
