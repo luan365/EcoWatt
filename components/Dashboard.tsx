@@ -4,6 +4,7 @@ import type { Appliance } from '../types';
 import { WalletIcon } from './icons/WalletIcon';
 import { BoltIcon } from './icons/BoltIcon';
 import { PlugIcon } from './icons/PlugIcon';
+import { LeafIcon } from './icons/LeafIcon';
 
 interface DashboardProps {
   appliances: Appliance[];
@@ -81,6 +82,66 @@ const Dashboard: React.FC<DashboardProps> = ({ appliances, tariff }) => {
           </div>
         )}
       </div>
+
+      {/* Savings Potential */}
+      {appliances.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-gradient-to-br from-emerald-900/30 to-emerald-800/10 border border-emerald-700/50 p-6 rounded-xl shadow-lg">
+            <div className="flex items-center mb-4">
+              <LeafIcon className="w-6 h-6 text-emerald-400 mr-3" />
+              <h3 className="text-lg font-bold text-white">Economia Potencial (20%)</h3>
+            </div>
+            <p className="text-3xl font-bold text-emerald-400 mb-2">
+              R$ {(estimatedMonthlyCost * 0.2).toFixed(2)}/mês
+            </p>
+            <p className="text-sm text-emerald-300">
+              Implementando as dicas de economia da IA
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/10 border border-blue-700/50 p-6 rounded-xl shadow-lg">
+            <div className="flex items-center mb-4">
+              <BoltIcon className="w-6 h-6 text-blue-400 mr-3" />
+              <h3 className="text-lg font-bold text-white">Economia Anual (20%)</h3>
+            </div>
+            <p className="text-3xl font-bold text-blue-400 mb-2">
+              R$ {(estimatedMonthlyCost * 0.2 * 12).toFixed(2)}/ano
+            </p>
+            <p className="text-sm text-blue-300">
+              Equivalente a {((totalDailyKWh * 0.2 * 365) / 1000).toFixed(0)} MWh economizados
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Tips */}
+      {appliances.length > 0 && (
+        <div className="bg-slate-800 p-6 rounded-xl shadow-lg">
+          <h2 className="text-2xl font-bold text-white mb-6">Dicas Rápidas de Economia</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <TipCard
+              title="Maior Consumidor"
+              content={chartData[0] ? `${chartData[0].name} (${chartData[0].value.toFixed(2)} kWh/dia)` : 'N/A'}
+              color="emerald"
+            />
+            <TipCard
+              title="Manutenção Regular"
+              content="Limpe filtros e serpentinas regularmente para manter a eficiência máxima do equipamento"
+              color="sky"
+            />
+            <TipCard
+              title="Monitoramento"
+              content="Acompanhe o consumo diário para identificar picos e ajustar seus hábitos"
+              color="violet"
+            />
+            <TipCard
+              title="Investimento"
+              content="Considere trocar aparelhos antigos por modelos mais eficientes com selo PROCEL"
+              color="pink"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -102,5 +163,29 @@ const StatCard: React.FC<StatCardProps> = ({ icon, title, value }) => (
     </div>
   </div>
 );
+
+interface TipCardProps {
+  title: string;
+  content: string;
+  color: 'emerald' | 'blue' | 'amber' | 'sky' | 'violet' | 'pink';
+}
+
+const TipCard: React.FC<TipCardProps> = ({ title, content, color }) => {
+  const colorStyles = {
+    emerald: 'bg-emerald-900/20 border-emerald-700/50 text-emerald-300',
+    blue: 'bg-blue-900/20 border-blue-700/50 text-blue-300',
+    amber: 'bg-amber-900/20 border-amber-700/50 text-amber-300',
+    sky: 'bg-sky-900/20 border-sky-700/50 text-sky-300',
+    violet: 'bg-violet-900/20 border-violet-700/50 text-violet-300',
+    pink: 'bg-pink-900/20 border-pink-700/50 text-pink-300',
+  };
+
+  return (
+    <div className={`${colorStyles[color]} border p-4 rounded-lg`}>
+      <p className="font-semibold text-white mb-1">{title}</p>
+      <p className="text-sm">{content}</p>
+    </div>
+  );
+};
 
 export default Dashboard;
