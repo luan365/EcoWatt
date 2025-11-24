@@ -2,10 +2,6 @@ import { GoogleGenAI } from "@google/genai";
 import type { Appliance } from '../types';
 
 export const getEnergySavingTips = async (appliances: Appliance[], tariff: number, apiKey: string): Promise<string> => {
-  if (!apiKey) {
-    return "Por favor, insira sua chave da API Gemini nas configurações.";
-  }
-  
   if (appliances.length === 0) {
     return "Por favor, adicione alguns eletrodomésticos primeiro para obter dicas personalizadas.";
   }

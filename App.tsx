@@ -2,8 +2,7 @@ import React, { useState, Suspense, useEffect } from 'react';
 import type { Appliance } from './types';
 import { LeafIcon } from './components/icons/LeafIcon';
 import { PlusIcon } from './components/icons/PlusIcon';
-import { KeyIcon } from './components/icons/KeyIcon';
-import { GoogleIcon } from './components/icons/GoogleIcon'; // <-- MUDANÇA 1
+import { GoogleIcon } from './components/icons/GoogleIcon';
 
 import {
   signInWithGoogle,
@@ -25,7 +24,6 @@ const AITips = React.lazy(() => import('./components/AITips'));
 const App: React.FC = () => {
   const [appliances, setAppliances] = useState<Appliance[]>([]);
   const [tariff, setTariff] = useLocalStorage<number>('tariff', 0.75);
-  const [apiKey, setApiKey] = useLocalStorage<string>('geminiApiKey', '');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -208,44 +206,31 @@ const App: React.FC = () => {
                     />
                   </div>
                 </div>
-                {/* API Key Input */}
-                <div>
-                  <label htmlFor="apiKey" className="block text-sm font-medium text-slate-300 mb-1">
-                    Chave da API Gemini
-                  </label>
-                  <div className="relative">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <KeyIcon className="h-5 w-5 text-slate-400" />
-                    </div>
-                    <input
-                      type="password"
-                      name="apiKey"
-                      id="apiKey"
-                      className="block w-full rounded-md border-slate-600 bg-slate-700 pl-10 pr-4 py-2 text-white focus:border-emerald-500 focus:ring-emerald-500 sm:text-lg"
-                      placeholder="Cole sua chave aqui"
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                    />
-                  </div>
-                </div>
               </div>
             </div>
 
-            <Suspense fallback={<div className="text-center text-slate-400 p-10">Carregando painel...</div>}>
-              <Dashboard appliances={appliances} tariff={tariff} />
-            </Suspense>
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              {/* Dashboard - Spans 3 columns */}
+              <div className="lg:col-span-3">
+                <Suspense fallback={<div className="text-center text-slate-400 p-10">Carregando painel...</div>}>
+                  <Dashboard appliances={appliances} tariff={tariff} />
+                </Suspense>
+              </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start min-h-[500px]">
-              <div className="lg:col-span-2 flex flex-col space-y-8">
-                <Suspense fallback={<div className="text-center text-slate-400 p-10">Carregando aparelhos...</div>}>
-                  <ApplianceList appliances={appliances} onDelete={deleteAppliance} tariff={tariff} />
-                </Suspense>
-              </div>
-              <div className="lg:col-span-1 h-full flex flex-col self-stretch">
+              {/* AI Tips - Spans 1 column, full height */}
+              <div className="lg:col-span-1 flex flex-col h-full">
                 <Suspense fallback={<div className="text-center text-slate-400 p-10">Carregando dicas...</div>}>
-                  <AITips appliances={appliances} tariff={tariff} apiKey={apiKey} />
+                  <AITips appliances={appliances} tariff={tariff} />
                 </Suspense>
               </div>
+            </div>
+
+            {/* Appliance List - Full Width Below */}
+            <div>
+              <Suspense fallback={<div className="text-center text-slate-400 p-10">Carregando aparelhos...</div>}>
+                <ApplianceList appliances={appliances} onDelete={deleteAppliance} tariff={tariff} />
+              </Suspense>
             </div>
           </div>
         )}

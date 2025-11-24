@@ -6,10 +6,10 @@ import { SparklesIcon } from './icons/SparklesIcon';
 interface AITipsProps {
   appliances: Appliance[];
   tariff: number;
-  apiKey: string;
 }
 
-const AITips: React.FC<AITipsProps> = ({ appliances, tariff, apiKey }) => {
+const AITips: React.FC<AITipsProps> = ({ appliances, tariff }) => {
+  const apiKey = import.meta.env.VITE_API_KEY || '';
   const [tips, setTips] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,8 +44,8 @@ const AITips: React.FC<AITipsProps> = ({ appliances, tariff, apiKey }) => {
 
       <button
         onClick={handleGenerateTips}
-        disabled={isLoading || !hasAppliances || !apiKey}
-        className="w-full bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-emerald-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mb-2"
+        disabled={isLoading || !hasAppliances}
+        className="w-full bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-emerald-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mb-4"
       >
         {isLoading ? (
           <>
@@ -59,15 +59,12 @@ const AITips: React.FC<AITipsProps> = ({ appliances, tariff, apiKey }) => {
           "Gerar Dicas com IA"
         )}
       </button>
-      <p className="text-xs text-center text-slate-500 h-4">
-        {!hasAppliances ? 'Adicione um aparelho para habilitar.' : !apiKey ? 'Insira sua API Key nas configurações.' : ''}
-      </p>
 
-      <div className="mt-2 flex-grow">
-        {error && <p className="text-red-400 text-center">{error}</p>}
+      <div className="flex-grow flex flex-col min-h-0">
+        {error && <p className="text-red-400 text-center mb-4">{error}</p>}
         
         {tips ? (
-          <div className="bg-slate-700/50 p-4 rounded-lg">
+          <div className="bg-slate-700/50 p-4 rounded-lg overflow-y-auto flex-grow">
             <div className="text-slate-300 text-sm space-y-1">
               {tips.split('\n').map((line, idx) => {
                 // Substitui **texto** por <strong>texto</strong>
@@ -79,7 +76,7 @@ const AITips: React.FC<AITipsProps> = ({ appliances, tariff, apiKey }) => {
             </div>
           </div>
         ) : !isLoading && (
-           <div className="text-center text-slate-500 pt-8">
+           <div className="flex-grow flex items-center justify-center text-slate-500">
                 <p>Suas dicas aparecerão aqui.</p>
             </div>
         )}
