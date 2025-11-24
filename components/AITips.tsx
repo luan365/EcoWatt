@@ -9,7 +9,7 @@ interface AITipsProps {
 }
 
 const AITips: React.FC<AITipsProps> = ({ appliances, tariff }) => {
-  const apiKey = import.meta.env.VITE_API_KEY || '';
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
   const [tips, setTips] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
