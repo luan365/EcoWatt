@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Dispatch, SetStateAction } from 'react';
 
 function getStorageValue<T,>(key: string, defaultValue: T): T {
     if (typeof window !== 'undefined') {
@@ -16,7 +16,7 @@ function getStorageValue<T,>(key: string, defaultValue: T): T {
     return defaultValue;
 }
 
-export const useLocalStorage = <T,>(key: string, defaultValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
+export const useLocalStorage = <T,>(key: string, defaultValue: T): [T, Dispatch<SetStateAction<T>>] => {
     const [value, setValue] = useState(() => {
         return getStorageValue(key, defaultValue);
     });
